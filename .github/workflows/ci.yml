@@ -1,4 +1,4 @@
-name: CI - Build and Test with Docker
+name: CI - Build and Test
 
 on:
   pull_request:
@@ -15,9 +15,5 @@ jobs:
       - name: Build Docker image
         run: docker build -t clinic-api-test .
 
-      - name: Run tests inside Docker container
+      - name: Run tests in container
         run: docker run --rm clinic-api-test pnpm test
-
-      - name: Cleanup Docker image (optional)
-        if: always()
-        run: docker rmi clinic-api-test || true

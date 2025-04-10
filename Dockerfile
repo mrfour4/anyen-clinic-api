@@ -1,10 +1,9 @@
-
-FROM node:20
+FROM node:22
 
 WORKDIR /app
 
-RUN curl -fsSL https://get.pnpm.io/install.sh | sh - && \
-    ln -s /root/.local/share/pnpm/pnpm /usr/local/bin/pnpm
+# Enable Corepack and install specific pnpm version
+RUN corepack enable && corepack prepare pnpm@10.8.0 --activate
 
 COPY pnpm-lock.yaml package.json ./
 
