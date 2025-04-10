@@ -1,10 +1,11 @@
 {
-    "name": "ecommerce-backend",
+    "name": "anyen-clinic-api",
     "version": "0.0.1",
     "description": "",
-    "author": "",
+    "author": "Anyen Clinic",
     "private": true,
     "license": "UNLICENSED",
+    "packageManager": "pnpm@10.8.0",
     "scripts": {
         "build": "nest build",
         "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
