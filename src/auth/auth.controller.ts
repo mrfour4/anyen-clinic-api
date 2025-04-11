@@ -1,7 +1,6 @@
 import {
     Body,
     Controller,
-    Get,
     Post,
     Res,
     UnauthorizedException,
@@ -12,6 +11,10 @@ import { OtpService } from 'src/otp/otp.service';
 import { errorResponse, successResponse } from 'src/utils/response.utils';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { PhoneDto } from './dto/phone.dto';
+import { RegisterDto } from './dto/register.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
@@ -54,7 +57,7 @@ export class AuthController {
     }
 
     @Post('register')
-    async register(@Body() body: any) {
+    async register(@Body() body: RegisterDto) {
         const { phone, password } = body;
         const hashedPassword = await this.authService.hashPassword(password);
         await this.authService.registerUser(phone, hashedPassword);
@@ -62,7 +65,7 @@ export class AuthController {
     }
 
     @Post('resend-otp')
-    async resendOtp(@Body() body: any) {
+    async resendOtp(@Body() body: PhoneDto) {
         const { phone } = body;
         try {
             await this.otpService.sendOtp(phone);
@@ -73,7 +76,7 @@ export class AuthController {
     }
 
     @Post('verify-otp')
-    async verifyOtp(@Body() body: any) {
+    async verifyOtp(@Body() body: VerifyOtpDto) {
         const { phone, otp } = body;
         try {
             const isValid = this.otpService.verifyOtp(phone, otp);
@@ -88,7 +91,7 @@ export class AuthController {
     }
 
     @Post('forgot-password')
-    async forgotPassword(@Body() body: any) {
+    async forgotPassword(@Body() body: PhoneDto) {
         const { phone } = body;
         try {
             await this.authService.requestPasswordReset(phone);
@@ -99,7 +102,7 @@ export class AuthController {
     }
 
     @Post('reset-password')
-    async resetPassword(@Body() body: any) {
+    async resetPassword(@Body() body: ResetPasswordDto) {
         const { phone, otp, newPassword } = body;
         try {
             const isValid = this.otpService.verifyOtp(phone, otp);
@@ -111,11 +114,5 @@ export class AuthController {
         } catch (error) {
             throw new UnauthorizedException(error.message);
         }
-    }
-
-    @UseGuards(JwtAuthGuard)
-    @Get('profile')
-    async getProfile(@Body() body: any) {
-        return { message: 'Profile data', data: body };
     }
 }

@@ -7,6 +7,7 @@ import {
     Req,
     UseGuards,
 } from '@nestjs/common';
+import { AuthenticatedRequest } from 'src/auth/types/auth-req';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { errorResponse, successResponse } from '../utils/response.utils';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -18,7 +19,7 @@ export class UsersController {
     constructor(private usersService: UsersService) {}
 
     @Get('profile')
-    async getProfile(@Req() req: any) {
+    async getProfile(@Req() req: AuthenticatedRequest) {
         const userId = req.user.userId;
         try {
             const user = await this.usersService.getUserProfile(userId);
@@ -32,7 +33,10 @@ export class UsersController {
     }
 
     @Patch('profile')
-    async updateProfile(@Req() req: any, @Body() body: UpdateProfileDto) {
+    async updateProfile(
+        @Req() req: AuthenticatedRequest,
+        @Body() body: UpdateProfileDto,
+    ) {
         const userId = req.user.userId;
         try {
             const updatedUser = await this.usersService.updateUserProfile(
@@ -49,7 +53,7 @@ export class UsersController {
     }
 
     @Delete('profile')
-    async deleteProfile(@Req() req: any) {
+    async deleteProfile(@Req() req: AuthenticatedRequest) {
         const userId = req.user.userId;
         try {
             await this.usersService.deleteUserProfile(userId);
