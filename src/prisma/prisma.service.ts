@@ -13,6 +13,16 @@ export class PrismaService
 {
     private readonly logger = new Logger(PrismaService.name);
 
+    constructor() {
+        super({
+            omit: {
+                user: {
+                    password: true,
+                },
+            },
+        });
+    }
+
     async onModuleInit() {
         try {
             await this.$connect();
