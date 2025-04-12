@@ -248,12 +248,11 @@ model PrescriptionDetail {
 }
 
 model Test {
-  id             String        @id @default(uuid())
-  testName       String
-  totalQuestions Int
-  createdAt      DateTime      @default(now())
-  questions      Question[]
-  testSessions   TestSession[]
+  id           String        @id @default(uuid())
+  testName     String
+  createdAt    DateTime      @default(now())
+  questions    Question[]
+  testSessions TestSession[]
 }
 
 model Question {
