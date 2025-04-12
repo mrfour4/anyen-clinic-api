@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { successResponse } from 'src/utils/response.utils';
 
 @Injectable()
 export class DoctorsService {
@@ -37,7 +36,10 @@ export class DoctorsService {
             avatarUrl: doc.user.avatarUrl,
         }));
 
-        return successResponse('List of doctors', mapped);
+        return {
+            message: 'List of doctors',
+            data: mapped,
+        };
     }
 
     async getDoctorById(id: string) {
@@ -65,23 +67,28 @@ export class DoctorsService {
             },
         });
 
-        if (!doctor) throw new NotFoundException('Doctor not found');
+        if (!doctor) {
+            throw new NotFoundException('Doctor not found');
+        }
 
-        return successResponse('Doctor profile', {
-            id: doctor.userId,
-            name: doctor.name,
-            gender: doctor.gender,
-            specialization: doctor.specialization,
-            workplace: doctor.workplace,
-            experience: doctor.experience,
-            workExperience: doctor.workExperience,
-            educationHistory: doctor.educationHistory,
-            medicalLicense: doctor.medicalLicense,
-            price: doctor.price,
-            available: doctor.available,
-            avatarUrl: doctor.user.avatarUrl,
-            phoneNumber: doctor.user.phoneNumber,
-            createdAt: doctor.user.createdAt,
-        });
+        return {
+            message: 'Doctor profile',
+            data: {
+                id: doctor.userId,
+                name: doctor.name,
+                gender: doctor.gender,
+                specialization: doctor.specialization,
+                workplace: doctor.workplace,
+                experience: doctor.experience,
+                workExperience: doctor.workExperience,
+                educationHistory: doctor.educationHistory,
+                medicalLicense: doctor.medicalLicense,
+                price: doctor.price,
+                available: doctor.available,
+                avatarUrl: doctor.user.avatarUrl,
+                phoneNumber: doctor.user.phoneNumber,
+                createdAt: doctor.user.createdAt,
+            },
+        };
     }
 }

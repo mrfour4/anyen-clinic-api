@@ -6,7 +6,6 @@ import {
 import { sendNotification } from 'src/notifications/utils/notifications.utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SupabaseService } from 'src/supabase/supabase.service';
-import { successResponse } from 'src/utils/response.utils';
 import { SendMessageDto } from './dto/send-message.dto';
 
 @Injectable()
@@ -74,7 +73,10 @@ export class ChatsService {
             'Bạn có tin nhắn mới trong cuộc hẹn',
         );
 
-        return successResponse('Message sent', message);
+        return {
+            message: 'Message sent',
+            data: message,
+        };
     }
 
     async uploadImage(
@@ -121,9 +123,10 @@ export class ChatsService {
             file.mimetype,
         );
 
-        return successResponse('Image uploaded successfully', {
-            mediaUrl: publicUrl,
-        });
+        return {
+            message: 'Image uploaded successfully',
+            data: { mediaUrl: publicUrl },
+        };
     }
 
     async getMessages(user: any, appointmentId: string) {
@@ -145,6 +148,9 @@ export class ChatsService {
             orderBy: { createdAt: 'asc' },
         });
 
-        return successResponse('Messages retrieved', messages);
+        return {
+            message: 'Messages retrieved',
+            data: messages,
+        };
     }
 }

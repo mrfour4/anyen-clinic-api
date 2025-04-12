@@ -1,6 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { successResponse } from 'src/utils/response.utils';
 
 @Injectable()
 export class NotificationsService {
@@ -16,7 +15,10 @@ export class NotificationsService {
             },
         });
 
-        return successResponse('Your notifications', notifications);
+        return {
+            message: 'Your notifications',
+            data: notifications,
+        };
     }
 
     async markAsRead(user: { userId: string }, notificationId: string) {
@@ -35,7 +37,10 @@ export class NotificationsService {
             data: { isRead: true },
         });
 
-        return successResponse('Notification marked as read', updated);
+        return {
+            message: 'Notification marked as read',
+            data: updated,
+        };
     }
 
     async updateNotificationSetting(
@@ -60,7 +65,10 @@ export class NotificationsService {
             },
         });
 
-        return successResponse('Notification setting updated', updated);
+        return {
+            message: 'Notification setting updated',
+            data: updated,
+        };
     }
 
     async getNotificationSettings(user: { userId: string }) {
@@ -70,6 +78,9 @@ export class NotificationsService {
             },
         });
 
-        return successResponse('Notification settings retrieved', settings);
+        return {
+            message: 'Notification settings retrieved',
+            data: settings,
+        };
     }
 }

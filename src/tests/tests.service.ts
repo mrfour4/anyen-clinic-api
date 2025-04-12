@@ -1,6 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { successResponse } from 'src/utils/response.utils';
 import { CreateBulkQuestionDto } from './dto/create-bulk-question.dto';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { CreateTestDto } from './dto/create-test.dto';
@@ -18,7 +17,10 @@ export class TestsService {
             },
         });
 
-        return successResponse('Test created', test);
+        return {
+            message: 'Test created',
+            data: test,
+        };
     }
 
     async createQuestion(testId: string, dto: CreateQuestionDto) {
@@ -40,7 +42,10 @@ export class TestsService {
             ),
         );
 
-        return successResponse('Question and answers created');
+        return {
+            message: 'Question and answers created',
+            data: question,
+        };
     }
 
     async createBulkQuestions(testId: string, dto: CreateBulkQuestionDto) {
@@ -68,7 +73,10 @@ export class TestsService {
             createdQuestions.push(question);
         }
 
-        return successResponse('Bulk questions created', createdQuestions);
+        return {
+            message: 'Bulk questions created',
+            data: createdQuestions,
+        };
     }
 
     async startTestSession(patientId: string, testId: string) {
@@ -78,7 +86,11 @@ export class TestsService {
                 testId,
             },
         });
-        return successResponse('Test session started', session);
+
+        return {
+            message: 'Test session started',
+            data: session,
+        };
     }
 
     async submitAnswer(patientId: string, dto: SubmitAnswerDto) {
@@ -98,7 +110,10 @@ export class TestsService {
             },
         });
 
-        return successResponse('Answer submitted', result);
+        return {
+            message: 'Answer submitted',
+            data: result,
+        };
     }
 
     async submitFullTest(patientId: string, dto: SubmitTestDto) {
@@ -122,7 +137,10 @@ export class TestsService {
             ),
         );
 
-        return successResponse('Full test submitted', results);
+        return {
+            message: 'Full test submitted',
+            data: results,
+        };
     }
 
     async getResultsForPatient(patientId: string) {
@@ -139,7 +157,10 @@ export class TestsService {
             },
         });
 
-        return successResponse('Your test results', results);
+        return {
+            message: 'Your test results',
+            data: results,
+        };
     }
 
     async getResultsForDoctor(patientId: string) {
@@ -156,7 +177,10 @@ export class TestsService {
             },
         });
 
-        return successResponse('Patient test results', results);
+        return {
+            message: 'Patient test results',
+            data: results,
+        };
     }
 
     async getAllTestsWithQuestionCount() {
@@ -177,9 +201,9 @@ export class TestsService {
             }),
         );
 
-        return successResponse(
-            'All tests with question counts',
-            testsWithCounts,
-        );
+        return {
+            message: 'All tests with question counts',
+            data: testsWithCounts,
+        };
     }
 }

@@ -4,7 +4,6 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { successResponse } from 'src/utils/response.utils';
 import { AddPrescriptionDetailDto } from './dto/add-detail.dto';
 import { CreatePrescriptionDto } from './dto/create-prescription.dto';
 
@@ -31,7 +30,10 @@ export class PrescriptionsService {
             },
         });
 
-        return successResponse('Prescription created', prescription);
+        return {
+            message: 'Prescription created',
+            data: prescription,
+        };
     }
 
     async addDetail(
@@ -55,7 +57,10 @@ export class PrescriptionsService {
             },
         });
 
-        return successResponse('Detail added', detail);
+        return {
+            message: 'Detail added',
+            data: detail,
+        };
     }
 
     async getPrescriptionsByPatient(patientId: string) {
@@ -65,7 +70,10 @@ export class PrescriptionsService {
             orderBy: { createdAt: 'desc' },
         });
 
-        return successResponse('Prescriptions retrieved', prescriptions);
+        return {
+            message: 'Prescriptions retrieved',
+            data: prescriptions,
+        };
     }
 
     async getPrescriptionsByDoctor(doctorId: string) {
@@ -75,7 +83,10 @@ export class PrescriptionsService {
             orderBy: { createdAt: 'desc' },
         });
 
-        return successResponse('Prescriptions retrieved', prescriptions);
+        return {
+            message: 'Prescriptions retrieved',
+            data: prescriptions,
+        };
     }
 
     async getById(user: any, prescriptionId: string) {
@@ -84,17 +95,21 @@ export class PrescriptionsService {
             include: { details: true, appointment: true },
         });
 
-        if (!prescription)
+        if (!prescription) {
             throw new NotFoundException('Prescription not found');
+        }
 
-        if (user.role === 'doctor' && prescription.doctorId !== user.userId) {
+        const isOwner =
+            (user.role === 'doctor' && prescription.doctorId === user.userId) ||
+            (user.role === 'patient' && prescription.patientId === user.userId);
+
+        if (!isOwner) {
             throw new ForbiddenException('Not your prescription');
         }
 
-        if (user.role === 'patient' && prescription.patientId !== user.userId) {
-            throw new ForbiddenException('Not your prescription');
-        }
-
-        return successResponse('Prescription details', prescription);
+        return {
+            message: 'Prescription details',
+            data: prescription,
+        };
     }
 }

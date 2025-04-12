@@ -1,11 +1,15 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    NotFoundException,
+    UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { Response } from 'express';
 import { OtpService } from 'src/otp/otp.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { errorResponse, successResponse } from 'src/utils/response.utils';
 
 @Injectable()
 export class AuthService {
@@ -39,35 +43,33 @@ export class AuthService {
             sameSite: 'strict',
             maxAge: 60 * 60 * 1000,
         });
+
         return {
-            message: 'Login successful',
-            user: { id: user.id, phone: user.phoneNumber, role: user.role },
+            user: {
+                id: user.id,
+                phone: user.phoneNumber,
+                role: user.role,
+            },
         };
     }
 
     async logoutUser(response: Response) {
         response.clearCookie('access_token');
-        return { message: 'Logout successful' };
     }
 
-    async validateUser(phone: string, password: string): Promise<User | null> {
-        try {
-            const user = await this.prisma.user.findUnique({
-                where: { phoneNumber: phone },
-                omit: {
-                    passwordHash: false,
-                },
-            });
-            if (
-                user &&
-                (await this.comparePasswords(password, user.passwordHash))
-            ) {
-                return user;
-            }
-            return null;
-        } catch (error) {
-            throw new UnauthorizedException('User validation failed');
-        }
+    async validateUser(phone: string, password: string): Promise<User> {
+        const user = await this.prisma.user.findUnique({
+            where: { phoneNumber: phone },
+            omit: {
+                passwordHash: false,
+            },
+        });
+        if (!user) throw new UnauthorizedException('Invalid credentials');
+
+        const match = await this.comparePasswords(password, user.passwordHash);
+        if (!match) throw new UnauthorizedException('Invalid credentials');
+
+        return user;
     }
 
     async registerUser(
@@ -75,54 +77,49 @@ export class AuthService {
         hashedPassword: string,
         role: 'patient' | 'doctor' | 'admin' = 'patient',
     ) {
-        try {
-            if (role === 'admin') {
-                const existingAdmin = await this.prisma.user.findFirst({
-                    where: { role: 'admin' },
-                });
-                if (existingAdmin) {
-                    return errorResponse('Admin account already exists');
-                }
-            }
-
-            const data: any = {
-                phoneNumber: phone,
-                passwordHash: hashedPassword,
-                role,
-            };
-
-            if (role === 'patient') {
-                data.patient = { create: { fullName: 'Unnamed Patient' } };
-            } else if (role === 'doctor') {
-                data.doctor = {
-                    create: {
-                        name: 'Unnamed Doctor',
-                        specialization: '',
-                        workplace: '',
-                        experience: 0,
-                        workExperience: '',
-                        educationHistory: '',
-                        medicalLicense: '',
-                    },
-                };
-            } else if (role === 'admin') {
-                data.admin = { create: { name: 'System Admin' } };
-            }
-
-            const user = await this.prisma.user.create({
-                data,
+        if (role === 'admin') {
+            const existingAdmin = await this.prisma.user.findFirst({
+                where: { role: 'admin' },
             });
-
-            await this.otpService.sendOtp(phone);
-            return successResponse('User registered successfully', {
-                userId: user.id,
-            });
-        } catch (err) {
-            return errorResponse('Register failed');
+            if (existingAdmin) {
+                throw new BadRequestException('Admin account already exists');
+            }
         }
+
+        const data: any = {
+            phoneNumber: phone,
+            passwordHash: hashedPassword,
+            role,
+        };
+
+        if (role === 'patient') {
+            data.patient = { create: { fullName: 'Unnamed Patient' } };
+        } else if (role === 'doctor') {
+            data.doctor = {
+                create: {
+                    name: 'Unnamed Doctor',
+                    specialization: '',
+                    workplace: '',
+                    experience: 0,
+                    workExperience: '',
+                    educationHistory: '',
+                    medicalLicense: '',
+                },
+            };
+        } else if (role === 'admin') {
+            data.admin = { create: { name: 'System Admin' } };
+        }
+
+        const user = await this.prisma.user.create({ data });
+        await this.otpService.sendOtp(phone);
+
+        return {
+            message: 'User registered successfully',
+            data: { userId: user.id },
+        };
     }
 
-    async verifyUserPhone(phone: string): Promise<User> {
+    async verifyUserPhone(phone: string) {
         return this.prisma.user.update({
             where: { phoneNumber: phone },
             data: { isVerified: true },
@@ -133,15 +130,15 @@ export class AuthService {
         const user = await this.prisma.user.findUnique({
             where: { phoneNumber: phone },
         });
+
         if (!user) {
-            throw new UnauthorizedException('Phone number not found');
+            throw new NotFoundException('Phone number not found');
         }
 
         await this.otpService.sendOtp(phone);
-        return 'OTP sent for password reset';
     }
 
-    async resetPassword(phone: string, newPassword: string): Promise<User> {
+    async resetPassword(phone: string, newPassword: string) {
         const hashedPassword = await this.hashPassword(newPassword);
         return this.prisma.user.update({
             where: { phoneNumber: phone },
@@ -150,37 +147,42 @@ export class AuthService {
     }
 
     async getCurrentProfile(user: { userId: string; role: string }) {
-        try {
-            if (user.role === 'patient') {
-                const patient = await this.prisma.patient.findUnique({
-                    where: { userId: user.userId },
-                    include: { user: true },
-                });
-                if (!patient) return errorResponse('Patient not found');
-                return successResponse('Patient profile', patient);
-            }
-
-            if (user.role === 'doctor') {
-                const doctor = await this.prisma.doctor.findUnique({
-                    where: { userId: user.userId },
-                    include: { user: true },
-                });
-                if (!doctor) return errorResponse('Doctor not found');
-                return successResponse('Doctor profile', doctor);
-            }
-
-            if (user.role === 'admin') {
-                const admin = await this.prisma.admin.findUnique({
-                    where: { userId: user.userId },
-                    include: { user: true },
-                });
-                if (!admin) return errorResponse('Admin not found');
-                return successResponse('Admin profile', admin);
-            }
-
-            return errorResponse('Unknown role');
-        } catch (error) {
-            return errorResponse('Failed to fetch profile');
+        if (user.role === 'patient') {
+            const patient = await this.prisma.patient.findUnique({
+                where: { userId: user.userId },
+                include: { user: true },
+            });
+            if (!patient) throw new NotFoundException('Patient not found');
+            return {
+                message: 'Patient profile',
+                data: patient,
+            };
         }
+
+        if (user.role === 'doctor') {
+            const doctor = await this.prisma.doctor.findUnique({
+                where: { userId: user.userId },
+                include: { user: true },
+            });
+            if (!doctor) throw new NotFoundException('Doctor not found');
+            return {
+                message: 'Doctor profile',
+                data: doctor,
+            };
+        }
+
+        if (user.role === 'admin') {
+            const admin = await this.prisma.admin.findUnique({
+                where: { userId: user.userId },
+                include: { user: true },
+            });
+            if (!admin) throw new NotFoundException('Admin not found');
+            return {
+                message: 'Admin profile',
+                data: admin,
+            };
+        }
+
+        throw new NotFoundException('Unknown role');
     }
 }

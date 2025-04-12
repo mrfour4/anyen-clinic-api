@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { errorResponse, successResponse } from 'src/utils/response.utils';
 import { CreateEmotionDto } from './dto/create-emotion.dto';
 import { UpdatePatientProfileDto } from './dto/update-patient-profile.dto';
 
@@ -23,27 +26,30 @@ export class PatientsService {
         });
 
         if (!patient) {
-            return errorResponse('Patient not found');
+            throw new NotFoundException('Patient not found');
         }
 
-        return successResponse('Patient profile retrieved', {
-            ...patient,
-            phoneNumber: patient.user.phoneNumber,
-            avatarUrl: patient.user.avatarUrl,
-            createdAt: patient.user.createdAt,
-        });
+        return {
+            message: 'Patient profile retrieved',
+            data: {
+                ...patient,
+                phoneNumber: patient.user.phoneNumber,
+                avatarUrl: patient.user.avatarUrl,
+                createdAt: patient.user.createdAt,
+            },
+        };
     }
 
     async updateProfile(userId: string, dto: UpdatePatientProfileDto) {
-        try {
-            const updated = await this.prisma.patient.update({
-                where: { userId },
-                data: dto,
-            });
-            return successResponse('Patient profile updated', updated);
-        } catch (error) {
-            return errorResponse('Failed to update patient profile');
-        }
+        const updated = await this.prisma.patient.update({
+            where: { userId },
+            data: dto,
+        });
+
+        return {
+            message: 'Patient profile updated',
+            data: updated,
+        };
     }
 
     async getEmotions(userId: string) {
@@ -52,22 +58,25 @@ export class PatientsService {
             orderBy: { createdAt: 'desc' },
         });
 
-        return successResponse('Emotion logs retrieved', emotions);
+        return {
+            message: 'Emotion logs retrieved',
+            data: emotions,
+        };
     }
 
     async createEmotion(userId: string, dto: CreateEmotionDto) {
-        try {
-            const emotion = await this.prisma.emotionLog.create({
-                data: {
-                    patientId: userId,
-                    emotionStatus: dto.emotionStatus,
-                    description: dto.description,
-                },
-            });
-            return successResponse('Emotion log created', emotion);
-        } catch (error) {
-            return errorResponse('Failed to create emotion log');
-        }
+        const emotion = await this.prisma.emotionLog.create({
+            data: {
+                patientId: userId,
+                emotionStatus: dto.emotionStatus,
+                description: dto.description,
+            },
+        });
+
+        return {
+            message: 'Emotion log created',
+            data: emotion,
+        };
     }
 
     async getHealthRecords(userId: string) {
@@ -76,35 +85,38 @@ export class PatientsService {
             orderBy: { recordDate: 'desc' },
         });
 
-        return successResponse('Health records retrieved', records);
+        return {
+            message: 'Health records retrieved',
+            data: records,
+        };
     }
 
     async createHealthRecord(userId: string, body: any) {
         const { recordDate, heightCm, weightKg } = body;
 
         if (!recordDate || !heightCm || !weightKg) {
-            return errorResponse('Missing required fields');
+            throw new BadRequestException('Missing required fields');
         }
 
         const height = parseFloat(heightCm);
         const weight = parseFloat(weightKg);
 
         if (height <= 0 || weight <= 0) {
-            return errorResponse('Invalid height or weight');
+            throw new BadRequestException('Invalid height or weight');
         }
 
-        try {
-            const record = await this.prisma.healthRecord.create({
-                data: {
-                    patientId: userId,
-                    recordDate: new Date(recordDate),
-                    heightCm: height,
-                    weightKg: weight,
-                },
-            });
-            return successResponse('Health record created', record);
-        } catch (error) {
-            return errorResponse('Failed to create health record');
-        }
+        const record = await this.prisma.healthRecord.create({
+            data: {
+                patientId: userId,
+                recordDate: new Date(recordDate),
+                heightCm: height,
+                weightKg: weight,
+            },
+        });
+
+        return {
+            message: 'Health record created',
+            data: record,
+        };
     }
 }

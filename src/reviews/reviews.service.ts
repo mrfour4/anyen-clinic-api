@@ -4,7 +4,6 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { errorResponse, successResponse } from 'src/utils/response.utils';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { ModerateReviewDto } from './dto/moderate-review.dto';
 
@@ -35,7 +34,9 @@ export class ReviewsService {
         });
 
         if (existing) {
-            return errorResponse('You already reviewed this appointment');
+            throw new BadRequestException(
+                'You already reviewed this appointment',
+            );
         }
 
         const review = await this.prisma.review.create({
@@ -53,7 +54,10 @@ export class ReviewsService {
             data: { isReviewed: true },
         });
 
-        return successResponse('Review submitted', review);
+        return {
+            message: 'Review submitted',
+            data: review,
+        };
     }
 
     async getByDoctor(doctorId: string) {
@@ -72,7 +76,10 @@ export class ReviewsService {
             },
         });
 
-        return successResponse('Reviews for doctor', reviews);
+        return {
+            message: 'Reviews for doctor',
+            data: reviews,
+        };
     }
 
     async moderate(reviewId: string, dto: ModerateReviewDto) {
@@ -80,13 +87,18 @@ export class ReviewsService {
             where: { id: reviewId },
         });
 
-        if (!review) throw new NotFoundException('Review not found');
+        if (!review) {
+            throw new NotFoundException('Review not found');
+        }
 
         const updated = await this.prisma.review.update({
             where: { id: reviewId },
             data: { isViolated: dto.isViolated },
         });
 
-        return successResponse('Review moderation updated', updated);
+        return {
+            message: 'Review moderation updated',
+            data: updated,
+        };
     }
 }

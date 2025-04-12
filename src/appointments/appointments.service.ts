@@ -1,11 +1,11 @@
 import {
+    BadRequestException,
     ForbiddenException,
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
 import { sendNotification } from 'src/notifications/utils/notifications.utils';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { errorResponse, successResponse } from 'src/utils/response.utils';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 
@@ -14,29 +14,28 @@ export class AppointmentsService {
     constructor(private prisma: PrismaService) {}
 
     async create(patientId: string, dto: CreateAppointmentDto) {
-        try {
-            const appointment = await this.prisma.appointment.create({
-                data: {
-                    patientId,
-                    doctorId: dto.doctorId,
-                    appointmentTime: new Date(dto.appointmentTime),
-                    appointmentType: dto.appointmentType,
-                    question: dto.question,
-                    status: 'Pending',
-                },
-            });
+        const appointment = await this.prisma.appointment.create({
+            data: {
+                patientId,
+                doctorId: dto.doctorId,
+                appointmentTime: new Date(dto.appointmentTime),
+                appointmentType: dto.appointmentType,
+                question: dto.question,
+                status: 'Pending',
+            },
+        });
 
-            await sendNotification(
-                this.prisma,
-                dto.doctorId,
-                'appointments',
-                `Bạn có lịch hẹn mới từ bệnh nhân`,
-            );
+        await sendNotification(
+            this.prisma,
+            dto.doctorId,
+            'appointments',
+            `Bạn có lịch hẹn mới từ bệnh nhân`,
+        );
 
-            return successResponse('Appointment created', appointment);
-        } catch (error) {
-            return errorResponse('Failed to create appointment');
-        }
+        return {
+            message: 'Appointment created',
+            data: appointment,
+        };
     }
 
     async findAll(user: { userId: string; role: string }) {
@@ -68,7 +67,10 @@ export class AppointmentsService {
             },
         });
 
-        return successResponse('Appointments retrieved', appointments);
+        return {
+            message: 'Appointments retrieved',
+            data: appointments,
+        };
     }
 
     async update(
@@ -97,11 +99,13 @@ export class AppointmentsService {
         }
 
         if (dto.status === 'Canceled' && !dto.cancelReason) {
-            return errorResponse('Cancel reason is required');
+            throw new BadRequestException('Cancel reason is required');
         }
 
         if (dto.appointmentTime && user.role !== 'patient') {
-            return errorResponse('Only patients can reschedule appointments');
+            throw new ForbiddenException(
+                'Only patients can reschedule appointments',
+            );
         }
 
         const updated = await this.prisma.appointment.update({
@@ -115,6 +119,9 @@ export class AppointmentsService {
             },
         });
 
-        return successResponse('Appointment updated', updated);
+        return {
+            message: 'Appointment updated',
+            data: updated,
+        };
     }
 }

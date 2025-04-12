@@ -6,6 +6,8 @@ import { AppointmentsModule } from './appointments/appointments.module';
 import { AuthModule } from './auth/auth.module';
 import { ChatsModule } from './chats/chats.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { DoctorsModule } from './doctors/doctors.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { OtpModule } from './otp/otp.module';
 import { PatientsModule } from './patients/patients.module';
 import { PaymentsModule } from './payments/payments.module';
@@ -14,9 +16,6 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { TestsModule } from './tests/tests.module';
-import { UsersModule } from './users/users.module';
-import { NotificationsModule } from './notifications/notifications.module';
-import { DoctorsModule } from './doctors/doctors.module';
 
 @Module({
     imports: [
@@ -27,7 +26,6 @@ import { DoctorsModule } from './doctors/doctors.module';
         AuthModule,
         PrismaModule,
         OtpModule,
-        UsersModule,
         PatientsModule,
         AppointmentsModule,
         ReviewsModule,

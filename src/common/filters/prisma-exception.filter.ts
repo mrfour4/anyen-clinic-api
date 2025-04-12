@@ -70,8 +70,6 @@ export class PrismaClientExceptionFilter implements ExceptionFilter {
             success: false,
             message,
             error: exception.message,
-            path: request.url,
-            timestamp: new Date().toISOString(),
         });
     }
 }

@@ -1,6 +1,9 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+    BadRequestException,
+    ForbiddenException,
+    Injectable,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { errorResponse, successResponse } from 'src/utils/response.utils';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 
 @Injectable()
@@ -21,7 +24,7 @@ export class PaymentsService {
         });
 
         if (existing) {
-            return errorResponse('Payment request already exists');
+            throw new BadRequestException('Payment request already exists');
         }
 
         const payment = await this.prisma.payment.create({
@@ -37,7 +40,10 @@ export class PaymentsService {
         });
 
         // TODO: redirect URL, signature sẽ xử lý sau
-        return successResponse('Payment request created', payment);
+        return {
+            message: 'Payment request created',
+            data: payment,
+        };
     }
 
     async getPaymentsByPatient(patientId: string) {
@@ -52,7 +58,10 @@ export class PaymentsService {
             },
         });
 
-        return successResponse('Your payment history', payments);
+        return {
+            message: 'Your payment history',
+            data: payments,
+        };
     }
 
     async getPaymentsByDoctor(doctorId: string) {
@@ -67,6 +76,9 @@ export class PaymentsService {
             },
         });
 
-        return successResponse('Received payments', payments);
+        return {
+            message: 'Received payments',
+            data: payments,
+        };
     }
 }

@@ -46,7 +46,6 @@ export class OtpService {
         await sendOtpViaTwilio(phone, otp);
         this.storeOtp(phone, otp);
         this.updateThrottle(phone);
-        console.log(`OTP sent to ${phone}: ${otp}`);
         return otp;
     }
 
