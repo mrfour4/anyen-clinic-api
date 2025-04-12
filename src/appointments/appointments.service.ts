@@ -29,7 +29,7 @@ export class AppointmentsService {
             this.prisma,
             dto.doctorId,
             'appointments',
-            `Bạn có lịch hẹn mới từ bệnh nhân`,
+            'You have a new appointment from the patient',
         );
 
         return {
