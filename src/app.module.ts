@@ -9,6 +9,7 @@ import { OtpModule } from './otp/otp.module';
 import { PatientsModule } from './patients/patients.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
     imports: [
@@ -22,6 +23,7 @@ import { UsersModule } from './users/users.module';
         UsersModule,
         PatientsModule,
         AppointmentsModule,
+        ReviewsModule,
     ],
     controllers: [AppController],
     providers: [AppService],
