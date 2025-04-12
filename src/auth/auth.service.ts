@@ -92,7 +92,7 @@ export class AuthService {
             };
 
             if (role === 'patient') {
-                data.patient = { create: {} };
+                data.patient = { create: { fullName: 'Unnamed Patient' } };
             } else if (role === 'doctor') {
                 data.doctor = {
                     create: {
