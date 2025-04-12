@@ -4,7 +4,7 @@ import { User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { Response } from 'express';
 import { OtpService } from 'src/otp/otp.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
@@ -75,6 +75,14 @@ export class AuthService {
                 phoneNumber: phone,
                 passwordHash: hashedPassword,
                 role: 'patient',
+                patient: {
+                    create: {
+                        fullName: `${phone} Patient`,
+                    },
+                },
+            },
+            include: {
+                patient: true,
             },
         });
 
