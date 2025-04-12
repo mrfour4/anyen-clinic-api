@@ -70,7 +70,7 @@ export class ChatsService {
             this.prisma,
             receiverId,
             'messages',
-            'Bạn có tin nhắn mới trong cuộc hẹn',
+            'You have a new message in the appointment',
         );
 
         return {

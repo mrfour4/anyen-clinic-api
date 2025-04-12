@@ -20,21 +20,12 @@ export class AdminService {
         return { message: 'Unverified doctors', data: doctors };
     }
 
-    async getVerifiedDoctors() {
-        const doctors = await this.prisma.doctor.findMany({
-            where: { isVerified: true },
-            include: { user: true },
-        });
-        return { message: 'Verified doctors', data: doctors };
-    }
-
     async verifyDoctor(id: string, dto: VerifyDoctorDto) {
         const doctor = await this.prisma.doctor.findUnique({
             where: { userId: id },
         });
+
         if (!doctor) throw new NotFoundException('Doctor not found');
-        if (doctor.isVerified)
-            throw new BadRequestException('Doctor already verified');
 
         const updated = await this.prisma.doctor.update({
             where: { userId: id },

@@ -96,6 +96,27 @@ export class DoctorsService {
         };
     }
 
+    async getVerifiedDoctors() {
+        const doctors = await this.prisma.doctor.findMany({
+            where: { isVerified: true },
+            orderBy: { name: 'asc' },
+            include: {
+                user: { select: { avatarUrl: true } },
+            },
+        });
+
+        return {
+            message: 'Verified doctors retrieved',
+            data: doctors.map((doc) => ({
+                id: doc.userId,
+                name: doc.name,
+                specialization: doc.specialization,
+                experience: doc.experience,
+                avatarUrl: doc.user.avatarUrl,
+            })),
+        };
+    }
+
     async updateStatus(
         doctorId: string,
         available: boolean,

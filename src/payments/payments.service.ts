@@ -39,6 +39,15 @@ export class PaymentsService {
             },
         });
 
+        // ! Simulate payment success
+        await this.prisma.payment.update({
+            where: { id: payment.id },
+            data: {
+                paymentStatus: 'paid',
+                totalPaid: payment.totalPrice,
+            },
+        });
+
         // TODO: redirect URL, signature sẽ xử lý sau
         return {
             message: 'Payment request created',
