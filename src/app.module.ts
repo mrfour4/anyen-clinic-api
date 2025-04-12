@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AppointmentsModule } from './appointments/appointments.module';
 import { AuthModule } from './auth/auth.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { OtpModule } from './otp/otp.module';
@@ -20,6 +21,7 @@ import { UsersModule } from './users/users.module';
         OtpModule,
         UsersModule,
         PatientsModule,
+        AppointmentsModule,
     ],
     controllers: [AppController],
     providers: [AppService],

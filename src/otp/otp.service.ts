@@ -41,6 +41,8 @@ export class OtpService {
         }
 
         const otp = this.generateOtp();
+        console.log(`Generated OTP for ${phone}: ${otp}`);
+
         await sendOtpViaTwilio(phone, otp);
         this.storeOtp(phone, otp);
         this.updateThrottle(phone);

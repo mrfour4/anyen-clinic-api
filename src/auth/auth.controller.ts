@@ -1,7 +1,9 @@
 import {
     Body,
     Controller,
+    Get,
     Post,
+    Req,
     Res,
     UnauthorizedException,
     UseGuards,
@@ -58,10 +60,13 @@ export class AuthController {
 
     @Post('register')
     async register(@Body() body: RegisterDto) {
-        const { phone, password } = body;
+        const { phone, password, role } = body;
         const hashedPassword = await this.authService.hashPassword(password);
-        await this.authService.registerUser(phone, hashedPassword);
-        return { message: 'User registered successfully' };
+        return this.authService.registerUser(
+            phone,
+            hashedPassword,
+            role || 'patient',
+        );
     }
 
     @Post('resend-otp')
@@ -114,5 +119,11 @@ export class AuthController {
         } catch (error) {
             throw new UnauthorizedException(error.message);
         }
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('me')
+    async getMe(@Req() req) {
+        return this.authService.getCurrentProfile(req.user);
     }
 }

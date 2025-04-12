@@ -1,12 +1,21 @@
-import { IsNotEmpty, IsPhoneNumber, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
+export enum Role {
+    patient = 'patient',
+    doctor = 'doctor',
+    admin = 'admin',
+}
 
 export class RegisterDto {
-    @IsString()
     @IsNotEmpty()
-    @IsPhoneNumber('VN')
+    @IsString()
     phone: string;
 
-    @IsString()
     @IsNotEmpty()
+    @IsString()
     password: string;
+
+    @IsOptional()
+    @IsEnum(Role)
+    role?: Role;
 }
