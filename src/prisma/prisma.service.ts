@@ -17,7 +17,7 @@ export class PrismaService
         super({
             omit: {
                 user: {
-                    password: true,
+                    passwordHash: true,
                 },
             },
         });

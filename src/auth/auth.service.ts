@@ -25,7 +25,7 @@ export class AuthService {
     async generateJwt(user: User) {
         return this.jwtService.sign({
             sub: user.id,
-            phone: user.phone,
+            phone: user.phoneNumber,
             role: user.role,
         });
     }
@@ -40,7 +40,7 @@ export class AuthService {
         });
         return {
             message: 'Login successful',
-            user: { id: user.id, phone: user.phone, role: user.role },
+            user: { id: user.id, phone: user.phoneNumber, role: user.role },
         };
     }
 
@@ -52,14 +52,14 @@ export class AuthService {
     async validateUser(phone: string, password: string): Promise<User | null> {
         try {
             const user = await this.prisma.user.findUnique({
-                where: { phone },
+                where: { phoneNumber: phone },
                 omit: {
-                    password: false,
+                    passwordHash: false,
                 },
             });
             if (
                 user &&
-                (await this.comparePasswords(password, user.password))
+                (await this.comparePasswords(password, user.passwordHash))
             ) {
                 return user;
             }
@@ -71,7 +71,11 @@ export class AuthService {
 
     async registerUser(phone: string, hashedPassword: string): Promise<User> {
         const user = await this.prisma.user.create({
-            data: { phone, password: hashedPassword, role: 'user' },
+            data: {
+                phoneNumber: phone,
+                passwordHash: hashedPassword,
+                role: 'patient',
+            },
         });
 
         await this.otpService.sendOtp(phone);
@@ -80,13 +84,15 @@ export class AuthService {
 
     async verifyUserPhone(phone: string): Promise<User> {
         return this.prisma.user.update({
-            where: { phone },
+            where: { phoneNumber: phone },
             data: { isVerified: true },
         });
     }
 
     async requestPasswordReset(phone: string) {
-        const user = await this.prisma.user.findUnique({ where: { phone } });
+        const user = await this.prisma.user.findUnique({
+            where: { phoneNumber: phone },
+        });
         if (!user) {
             throw new UnauthorizedException('Phone number not found');
         }
@@ -98,8 +104,8 @@ export class AuthService {
     async resetPassword(phone: string, newPassword: string): Promise<User> {
         const hashedPassword = await this.hashPassword(newPassword);
         return this.prisma.user.update({
-            where: { phone },
-            data: { password: hashedPassword },
+            where: { phoneNumber: phone },
+            data: { passwordHash: hashedPassword },
         });
     }
 }

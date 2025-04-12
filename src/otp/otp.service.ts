@@ -51,7 +51,6 @@ export class OtpService {
     verifyOtp(phone: string, otp: string): boolean {
         const storedOtp = this.otpStore.get(phone);
         if (!storedOtp) {
-            // throw new BadRequestException('OTP không tồn tại hoặc đã hết hạn.');
             throw new BadRequestException('OTP does not exist or has expired.');
         }
 

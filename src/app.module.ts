@@ -4,10 +4,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
-import { OrdersModule } from './orders/orders.module';
 import { OtpModule } from './otp/otp.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { ProductsModule } from './products/products.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -20,9 +18,6 @@ import { UsersModule } from './users/users.module';
         PrismaModule,
         OtpModule,
         UsersModule,
-        ProductsModule,
-        OrdersModule,
-        OtpModule,
     ],
     controllers: [AppController],
     providers: [AppService],

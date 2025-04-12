@@ -3,44 +3,318 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  patient
+  doctor
+  admin
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum AppointmentStatus {
+  Pending
+  Confirmed
+  Completed
+  Canceled
+}
+
+enum AppointmentType {
+  InPerson
+  Online
+}
+
+enum MessageType {
+  text
+  image
+  video
+  audio
+  call
+}
+
+enum PaymentStatus {
+  pending
+  partially_paid
+  paid
+  failed
+}
+
+enum RatingValue {
+  VeryPleased
+  Pleased
+  Normal
+  Unpleased
+}
+
+enum NotificationType {
+  appointments
+  messages
+  payments
+  reviews
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  phone      String   @unique
-  password   String
-  name       String?
-  avatar     String?
-  role       String   @default("user")
-  isVerified Boolean  @default(false)
+  id           String   @id @default(uuid())
+  phoneNumber  String   @unique
+  passwordHash String
+  avatarUrl    String?
+  role         Role
+  isVerified   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  patient Patient?
+  doctor  Doctor?
+  admin   Admin?
+}
+
+model Patient {
+  userId         String    @id
+  user           User      @relation(fields: [userId], references: [id])
+  fullName       String
+  dateOfBirth    DateTime?
+  gender         Gender?
+  anonymousName  String?   @unique
+  medicalHistory String?
+  allergies      String?
+
+  healthRecords HealthRecord[]
+  emotionLogs   EmotionLog[]
+  appointments  Appointment[]
+  reviews       Review[]
+  prescriptions Prescription[]
+  payments      Payment[]
+  testSessions  TestSession[]
+}
+
+model Doctor {
+  userId           String  @id
+  user             User    @relation(fields: [userId], references: [id])
+  name             String
+  gender           Gender?
+  specialization   String
+  workplace        String
+  experience       Int     @default(0)
+  workExperience   String
+  educationHistory String
+  medicalLicense   String
+  price            Int     @default(0)
+  available        Boolean @default(true)
+
+  appointments  Appointment[]
+  summaries     AppointmentSummary[]
+  prescriptions Prescription[]
+  reviews       Review[]
+  payments      Payment[]
+}
+
+model Admin {
+  userId    String  @id
+  user      User    @relation(fields: [userId], references: [id])
+  name      String
+  available Boolean @default(true)
+}
+
+model HealthRecord {
+  id         String   @id @default(uuid())
+  patientId  String
+  recordDate DateTime
+  heightCm   Float // đơn vị: cm
+  weightKg   Float // đơn vị: kg
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
 
-  orders Order[]
+  patient Patient @relation(fields: [patientId], references: [userId])
 }
 
-model Product {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  price       Float
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model EmotionLog {
+  id            String   @id @default(uuid())
+  patientId     String
+  emotionStatus String
+  description   String?
+  createdAt     DateTime @default(now())
 
-  orders Order[]
+  patient Patient @relation(fields: [patientId], references: [userId])
 }
 
-model Order {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  productId Int
-  quantity  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Appointment {
+  id              String            @id @default(uuid())
+  patientId       String
+  doctorId        String
+  appointmentTime DateTime
+  status          AppointmentStatus
+  cancelReason    String?
+  appointmentType AppointmentType
+  question        String
+  isReviewed      Boolean           @default(false)
+  createdAt       DateTime          @default(now())
 
-  user    User    @relation(fields: [userId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  patient      Patient             @relation(fields: [patientId], references: [userId])
+  doctor       Doctor              @relation(fields: [doctorId], references: [userId])
+  summary      AppointmentSummary?
+  reviews      Review[]
+  payments     Payment[]
+  messages     Message[]
+  Prescription Prescription[]
+}
+
+model AppointmentSummary {
+  id            String   @id @default(uuid())
+  appointmentId String   @unique
+  description   String
+  noteForAdmin  String
+  createdAt     DateTime @default(now())
+
+  appointment  Appointment @relation(fields: [appointmentId], references: [id])
+  Doctor       Doctor?     @relation(fields: [doctorUserId], references: [userId])
+  doctorUserId String?
+}
+
+model Review {
+  id            String      @id @default(uuid())
+  appointmentId String
+  patientId     String
+  doctorId      String
+  rating        RatingValue
+  comment       String?
+  isViolated    Boolean     @default(false)
+  helpfulCount  Int         @default(0)
+  reportCount   Int         @default(0)
+  createdAt     DateTime    @default(now())
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+  patient     Patient     @relation(fields: [patientId], references: [userId])
+  doctor      Doctor      @relation(fields: [doctorId], references: [userId])
+}
+
+model Message {
+  id            String      @id @default(uuid())
+  senderId      String
+  receiverId    String
+  appointmentId String?
+  content       String?
+  mediaUrl      String?
+  callDuration  Int?
+  messageType   MessageType
+  createdAt     DateTime    @default(now())
+
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  patientId     String
+  doctorId      String
+  appointmentId String
+  totalPrice    Int
+  totalPaid     Int           @default(0)
+  paymentStatus PaymentStatus @default(pending)
+  paymentMethod String?
+  transactionId String?
+  paidAt        DateTime?
+  updatedAt     DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+
+  patient     Patient     @relation(fields: [patientId], references: [userId])
+  doctor      Doctor      @relation(fields: [doctorId], references: [userId])
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+}
+
+model Prescription {
+  id            String   @id @default(uuid())
+  appointmentId String
+  doctorId      String?
+  patientId     String
+  createdAt     DateTime @default(now())
+
+  appointment Appointment          @relation(fields: [appointmentId], references: [id])
+  patient     Patient              @relation(fields: [patientId], references: [userId])
+  doctor      Doctor?              @relation(fields: [doctorId], references: [userId])
+  details     PrescriptionDetail[]
+}
+
+model PrescriptionDetail {
+  id             String @id @default(uuid())
+  prescriptionId String
+  nameAmount     String
+  dosage         String
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id])
+}
+
+model Test {
+  id             String        @id @default(uuid())
+  testName       String
+  totalQuestions Int
+  createdAt      DateTime      @default(now())
+  questions      Question[]
+  testSessions   TestSession[]
+}
+
+model Question {
+  id           String   @id @default(uuid())
+  testId       String
+  questionText String
+  createdAt    DateTime @default(now())
+
+  test        Test         @relation(fields: [testId], references: [id])
+  answers     Answer[]
+  testResults TestResult[]
+}
+
+model Answer {
+  id         String   @id @default(uuid())
+  questionId String
+  answerText String
+  createdAt  DateTime @default(now())
+
+  question    Question     @relation(fields: [questionId], references: [id])
+  testResults TestResult[]
+}
+
+model TestSession {
+  id        String   @id @default(uuid())
+  testId    String
+  patientId String
+  startedAt DateTime @default(now())
+
+  test    Test         @relation(fields: [testId], references: [id])
+  patient Patient      @relation(fields: [patientId], references: [userId])
+  results TestResult[]
+}
+
+model TestResult {
+  id            String   @id @default(uuid())
+  testSessionId String
+  questionId    String
+  answerId      String
+  createdAt     DateTime @default(now())
+
+  testSession TestSession @relation(fields: [testSessionId], references: [id])
+  question    Question    @relation(fields: [questionId], references: [id])
+  answer      Answer      @relation(fields: [answerId], references: [id])
+}
+
+model Notification {
+  id               String           @id @default(uuid())
+  recipientId      String // Tham chiếu đến User.id
+  notificationType NotificationType
+  content          String
+  isRead           Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+}
+
+model NotificationSetting {
+  id               String           @id @default(uuid())
+  recipientId      String // Tham chiếu đến User.id
+  notificationType NotificationType
+  isEnabled        Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+
+  @@unique([recipientId, notificationType])
 }
