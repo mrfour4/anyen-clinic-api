@@ -16,6 +16,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { TestsModule } from './tests/tests.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
     imports: [
@@ -36,6 +37,7 @@ import { TestsModule } from './tests/tests.module';
         SupabaseModule,
         NotificationsModule,
         DoctorsModule,
+        AdminModule,
     ],
     controllers: [AppController],
     providers: [AppService],
