@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+    ForbiddenException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -89,6 +93,37 @@ export class DoctorsService {
                 phoneNumber: doctor.user.phoneNumber,
                 createdAt: doctor.user.createdAt,
             },
+        };
+    }
+
+    async updateStatus(
+        doctorId: string,
+        available: boolean,
+        user: { userId: string; role: string },
+    ) {
+        const doctor = await this.prisma.doctor.findUnique({
+            where: { userId: doctorId },
+        });
+
+        if (!doctor) {
+            throw new NotFoundException('Doctor not found');
+        }
+
+        const isOwner = user.userId === doctorId;
+        const isAdmin = user.role === 'admin';
+
+        if (!isOwner && !isAdmin) {
+            throw new ForbiddenException('Not authorized to update status');
+        }
+
+        const updated = await this.prisma.doctor.update({
+            where: { userId: doctorId },
+            data: { available },
+        });
+
+        return {
+            message: 'Doctor status updated',
+            data: updated,
         };
     }
 }

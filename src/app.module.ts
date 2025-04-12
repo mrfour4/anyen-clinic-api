@@ -17,6 +17,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { TestsModule } from './tests/tests.module';
 import { AdminModule } from './admin/admin.module';
+import { StatisticsModule } from './statistics/statistics.module';
 
 @Module({
     imports: [
@@ -38,6 +39,7 @@ import { AdminModule } from './admin/admin.module';
         NotificationsModule,
         DoctorsModule,
         AdminModule,
+        StatisticsModule,
     ],
     controllers: [AppController],
     providers: [AppService],
