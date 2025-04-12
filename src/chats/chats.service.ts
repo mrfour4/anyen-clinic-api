@@ -3,6 +3,7 @@ import {
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
+import { sendNotification } from 'src/notifications/utils/notifications.utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { successResponse } from 'src/utils/response.utils';
@@ -61,6 +62,17 @@ export class ChatsService {
                 mediaUrl: dto.mediaUrl,
             },
         });
+
+        const receiverId = isPatient
+            ? appointment.doctorId
+            : appointment.patientId;
+
+        await sendNotification(
+            this.prisma,
+            receiverId,
+            'messages',
+            'Bạn có tin nhắn mới trong cuộc hẹn',
+        );
 
         return successResponse('Message sent', message);
     }

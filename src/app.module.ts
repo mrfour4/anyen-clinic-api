@@ -15,6 +15,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { TestsModule } from './tests/tests.module';
 import { UsersModule } from './users/users.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
     imports: [
@@ -34,6 +35,7 @@ import { UsersModule } from './users/users.module';
         PaymentsModule,
         ChatsModule,
         SupabaseModule,
+        NotificationsModule,
     ],
     controllers: [AppController],
     providers: [AppService],

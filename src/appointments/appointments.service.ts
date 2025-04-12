@@ -3,6 +3,7 @@ import {
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
+import { sendNotification } from 'src/notifications/utils/notifications.utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { errorResponse, successResponse } from 'src/utils/response.utils';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
@@ -24,6 +25,13 @@ export class AppointmentsService {
                     status: 'Pending',
                 },
             });
+
+            await sendNotification(
+                this.prisma,
+                dto.doctorId,
+                'appointments',
+                `Bạn có lịch hẹn mới từ bệnh nhân`,
+            );
 
             return successResponse('Appointment created', appointment);
         } catch (error) {
