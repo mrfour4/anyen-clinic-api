@@ -12,6 +12,7 @@ import { UsersModule } from './users/users.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { PrescriptionsModule } from './prescriptions/prescriptions.module';
 import { TestsModule } from './tests/tests.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
     imports: [
@@ -28,6 +29,7 @@ import { TestsModule } from './tests/tests.module';
         ReviewsModule,
         PrescriptionsModule,
         TestsModule,
+        PaymentsModule,
     ],
     controllers: [AppController],
     providers: [AppService],
