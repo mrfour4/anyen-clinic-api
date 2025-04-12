@@ -2,7 +2,10 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { PrismaClientExceptionFilter } from './common/filters/prisma-exception.filter';
+import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
+import { setupSwagger } from './swagger';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -19,7 +22,12 @@ async function bootstrap() {
         }),
     );
 
-    app.useGlobalFilters(new PrismaClientExceptionFilter());
+    app.useGlobalFilters(
+        new PrismaClientExceptionFilter(),
+        new AllExceptionsFilter(),
+    );
+
+    app.useGlobalInterceptors(new TransformResponseInterceptor());
 
     app.enableCors({
         origin: [
@@ -32,8 +40,11 @@ async function bootstrap() {
         credentials: true,
     });
 
+    setupSwagger(app);
+
     await app.listen(8080);
     console.log('🚀 ~ Server running on http://localhost:8080/api/v1');
+    console.log('📘 ~ Swagger Docs available at http://localhost:8080/docs');
 }
 
 bootstrap();
