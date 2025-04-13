@@ -3,7 +3,10 @@ import {
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateDoctorByAdminDto } from './dto/create-doctor.dto';
 import { MarkReviewViolationDto } from './dto/mark-review-violation.dto';
 import { UpdateAppointmentTypeDto } from './dto/update-appointment-type.dto';
 import { VerifyDoctorDto } from './dto/verify-doctor.dto';
@@ -11,6 +14,49 @@ import { VerifyDoctorDto } from './dto/verify-doctor.dto';
 @Injectable()
 export class AdminService {
     constructor(private prisma: PrismaService) {}
+
+    async createDoctorByAdmin(dto: CreateDoctorByAdminDto) {
+        const existing = await this.prisma.user.findUnique({
+            where: { phoneNumber: dto.phone },
+        });
+
+        if (existing) {
+            throw new BadRequestException('Phone number already registered');
+        }
+
+        const password = randomBytes(6).toString('hex'); // 12 ký tự
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const user = await this.prisma.user.create({
+            data: {
+                phoneNumber: dto.phone,
+                passwordHash: hashedPassword,
+                role: 'doctor',
+                isVerified: true,
+                doctor: {
+                    create: {
+                        name: dto.name,
+                        specialization: dto.specialization,
+                        workplace: dto.workplace,
+                        experience: dto.experience,
+                        workExperience: dto.workExperience,
+                        educationHistory: dto.educationHistory,
+                        medicalLicense: dto.medicalLicense,
+                        available: true,
+                    },
+                },
+            },
+        });
+
+        return {
+            message: 'Doctor created and verified',
+            data: {
+                userId: user.id,
+                phone: user.phoneNumber,
+                password,
+            },
+        };
+    }
 
     async getUnverifiedDoctors() {
         const doctors = await this.prisma.doctor.findMany({
