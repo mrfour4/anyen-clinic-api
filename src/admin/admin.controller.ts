@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    Param,
+    Patch,
+    Post,
+    UseGuards,
+} from '@nestjs/common';
 import {
     ApiBearerAuth,
     ApiBody,
@@ -12,6 +20,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { StatisticsService } from 'src/statistics/statistics.service';
 import { AdminService } from './admin.service';
+import { CreateDoctorByAdminDto } from './dto/create-doctor.dto';
 import { VerifyDoctorDto } from './dto/verify-doctor.dto';
 
 @ApiTags('Admin')
@@ -24,6 +33,13 @@ export class AdminController {
         private readonly adminService: AdminService,
         private readonly statisticsService: StatisticsService,
     ) {}
+
+    @Post('create-doctor')
+    @ApiOperation({ summary: 'Create doctor by admin (auto verified)' })
+    @ApiBody({ type: CreateDoctorByAdminDto })
+    async createDoctorByAdmin(@Body() dto: CreateDoctorByAdminDto) {
+        return this.adminService.createDoctorByAdmin(dto);
+    }
 
     @Patch('verify-doctor/:id')
     @ApiOperation({ summary: 'Verify a doctor by ID' })
